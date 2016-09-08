@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Candlescience{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+ <div class='container'>
+    <h1>List View</h1>
+ </div>
+</div>
+<body>
+
+<div class="container">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Location</th>
+        <th>Sku</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="alert-success">
+      {% for item in order %}
+        <td>{{ item.location }}</td>
+        <td>{{ item.sku }}</td>
+        <td>{{ item.date }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+
+  </table>
+
+</div>
+{% endblock %}
