@@ -1,5 +1,4 @@
-from flask import Flask, render_template, url_for, redirect, request
-from flask import flash
+from flask import Flask, render_template, url_for, redirect, request, flash
 # from flask_script import Manager
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
