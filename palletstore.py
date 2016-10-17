@@ -15,17 +15,33 @@ bootstrap = Bootstrap(app)
 moment = Moment(app)
 
 
-app.config['SECRET_KEY'] = 'wq3hnf}RY4v3D864=ZZ@B8]ikF[KEC[(x8,4W%azvLNbHos2.s'
+app.config['SECRET_KEY'] = 'some very hard to guess key'
+'''SECRET_KEY will be moved'''
 
 app.config['SQLALCHEMY_DATABASE_URI']=\
 'sqlite:////' + os.path.join(basedir, 'sqlite_product_location')
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
+'''Builds the Database using Flask-sqlalchemy plug-in'''
 
 
 class NameForm(Form):
-    select = SelectField('Select Product', choices=[('464 50lbs', '464 50lbs'),
-                         ('444 50lbs', '444 50lbs'), ('464 50lbs banded', '464 50lbs banded'), ('464 10lbs', '464 10lbs'), ('8oz Mason', '8oz Mason'), ('4oz Jelly', '4oz Jelly'), ('6oz Tin 120', '6oz Tin 120'), ('4oz Tin 120', '4oz Tin 120'), ('Soy Candle Making Kit', 'Soy Candle Making Kit'), ('4oz candle tin 12pc', '4oz candle tin 12pc'), ('8oz Mason MP', '8oz Mason MP')])
+    select = SelectField('Select Product', choices=[
+                         ('464 50lbs', '464 50lbs'),
+                         ('444 50lbs', '444 50lbs'),
+                         ('464 50lbs banded', '464 50lbs banded'),
+                         ('464 10lbs', '464 10lbs'),
+                         ('8oz Mason', '8oz Mason'),
+                         ('4oz Jelly', '4oz Jelly'),
+                         ('6oz Tin 120', '6oz Tin 120'),
+                         ('4oz Tin 120', '4oz Tin 120'),
+                         ('Soy Candle Making Kit', 'Soy Candle Making Kit'),
+                         ('4oz candle tin 12pc', '4oz candle tin 12pc'),
+                         ('8oz Mason MP', '8oz Mason MP')
+                         ])
     submit = SubmitField('Save')
+'''class NameForm creates an object inheriting from Form.
+Using SelectField creates a dropdown which takes two arguments,
+that make it a dropdown and SubmitField to create a save button'''
 
 
 @app.errorhandler(404)
@@ -36,13 +52,15 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_server_error(e):
     return (render_template('500.html', current_time=datetime.utcnow()), 500)
+'''Two error pages that will be moved to a different file with the Blueprint
+object'''
 
 
 @app.route('/')
 def index():
     order = PrimaryView.query.order_by(PrimaryView.date).all()
-    return (render_template('index.html',
-                           current_time=datetime.utcnow(), order=order))
+    return render_template('index.html', current_time=datetime.utcnow(),
+                           order=order)
 
 
 # The /retrieve will use Post method
@@ -50,21 +68,23 @@ def index():
 def retrieve():
     form = NameForm()
     order = PrimaryView.query.filter_by(sku=form.select.data).order_by(PrimaryView.date).all()
-    individual_date = PrimaryView.query.filter_by(sku=form.select.data).order_by(PrimaryView.date).first()
+    older_date = PrimaryView.query.filter_by(sku=form.select.data).order_by(PrimaryView.date).first()
     for item in order:
-        if individual_date.date <= str(date.today()) and request.method == 'POST':
-            oldest = PrimaryView.query.filter_by(sku=form.select.data).order_by(PrimaryView.date).first()
-            perma_date = oldest.date
-            oldest.sku = 'Empty'
-            oldest.date = 'N/A'
-            db.session.add(oldest)
+        if older_date.date <= str(date.today()) and request.method == 'POST':
+            perma_date = older_date.date
+            older_date.sku = 'Empty'
+            older_date.date = 'N/A'
+            db.session.add(older_date)
             db.session.commit()
-            flash('Product Name: %s - Location: %s Store date: %s' % (form.select.data, oldest.location, perma_date))
+            flash('Product Name: %s - Location: %s Store date: %s'
+                  % (form.select.data, older_date.location, perma_date))
             return(redirect(url_for('retrieve')))
-            flash('There are no more %s pallets available to retrieve DEBUG' % form.select.data)
+            flash('There are no more %s pallets available to retrieve DEBUG'
+                  % form.select.data)
             return(redirect(url_for('retrieve')))
     return (render_template('retrieve.html',
                             current_time=datetime.utcnow(), form=form))
+''''Retrieve Page: Retrieves the selected product with the oldest date. stored the NameForm object in the "form" variable. "order" variable holds PrimaryView which is the name of the database model, imorted from database_config.py which sets up the initial configuration using flask-sqlalchemy. "order" object variable queries the entire list of products in their location, filtered by selected proudct, and ordered by date. "older_date" object variable queries the first item/sku/product in the list by selected product, and by date. for "item" in "order" iterates through the entire list of products using "item" as the index variable. if "older_date.date" is less than today's date and the "request.method" is equals to 'POST' then create a "perma_date" variable containing the "older_date.date" object. Make the "older_date.sku" an "Empty" string, and the "older.date.date" a "N/A" string as well. Add and commit the session to the table. Used flask-bootstrap and give the user a "flash" message which displays the product name and its store date. If locations are full display a "there are no more pallets avialble to retrieve DEBUG" thats' a debug for me.  '''
 
 
 @app.route('/store', methods=['GET', 'POST'])
@@ -82,6 +102,7 @@ def store():
             return(redirect(url_for('store')))
     return(render_template('store.html', view=view,
                            current_time=datetime.utcnow(), form=form))
+
 
 if __name__ == '__main__':
     app.run(debug=True)
