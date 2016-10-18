@@ -81,8 +81,8 @@ def retrieve():
             flash('There are no more %s pallets available to retrieve DEBUG'
                   % form.select.data)
             return(redirect(url_for('retrieve')))
-    return (render_template('retrieve.html',
-                            current_time=datetime.utcnow(), form=form))
+    return render_template('retrieve.html',
+                           current_time=datetime.utcnow(), form=form)
 ''''Retrieve Page: Retrieves the selected product with the oldest date. stored the NameForm object in the "form" variable. "order" variable holds PrimaryView which is the name of the database model, imorted from database_config.py which sets up the initial configuration using flask-sqlalchemy. "order" object variable queries the entire list of products in their location, filtered by selected proudct, and ordered by date. "older_date" object variable queries the first item/sku/product in the list by selected product, and by date. for "item" in "order" iterates through the entire list of products using "item" as the index variable. if "older_date.date" is less than today's date and the "request.method" is equals to 'POST' then create a "perma_date" variable containing the "older_date.date" object. Make the "older_date.sku" an "Empty" string, and the "older.date.date" a "N/A" string as well. Add and commit the session to the table. Used flask-bootstrap and give the user a "flash" message which displays the product name and its store date. If locations are full display a "there are no more pallets avialble to retrieve DEBUG" thats' a debug for me.  '''
 
 
@@ -91,16 +91,21 @@ def store():
     form = NameForm()
     view = PrimaryView.query.all()
     for item in view:
-        if item.sku == 'Empty' and request.method == 'POST':
-            sku_search = PrimaryView.query.filter_by(sku='Empty').first()
-            sku_search.sku = form.select.data
-            sku_search.date = date.today()
-            db.session.add(sku_search)
-            db.session.commit()
-            flash('STORE IT AT: %s' % item.location)
-            return(redirect(url_for('store')))
-    return(render_template('store.html', view=view,
-                           current_time=datetime.utcnow(), form=form))
+        sku_search = PrimaryView.query.filter_by(sku='Empty').first()
+        try:
+            if sku_search.sku == 'Empty' and request.method == 'POST':
+                sku_search.sku = form.select.data
+                sku_search.date = date.today()
+                db.session.add(sku_search)
+                db.session.commit()
+                flash('STORE IT AT: %s' % sku_search.location)
+                return redirect(url_for('store'))
+        except:
+            if request.method == 'POST':
+                flash('The locations are full')
+                return redirect(url_for('store'))
+    return render_template('store.html', view=view,
+                           current_time=datetime.utcnow(), form=form)
 
 
 if __name__ == '__main__':
