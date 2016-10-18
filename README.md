@@ -1,6 +1,7 @@
 # palletstore
-Pick a product(sku), and program will tell you which location to store it at. With the oldest product taken first
-Chose a product(sku), and it will take the oldest store product(sku), retrieve, and tell you the date it was stored.
+Store: Pick a product(sku), and program will tell you which location to store it at. 
+
+Retrieve: Chose a product(sku) and the program will tell you which location to get it from, the program choses the oldest item of the product you selected by date.
 
 View
 ![Alt text](https://s22.postimg.org/gw4j7jmof/view.png "View")
