@@ -1,26 +1,19 @@
 from flask import Flask, render_template, url_for, redirect, request, flash
-# from flask_script import Manager
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_wtf import Form
 from datetime import datetime, date
-from database_config import PrimaryView, db, basedir
+from database_config import PrimaryView, db
 from wtforms import SubmitField, SelectField
-# from wtforms.validators import Required
-import os
+'''Imported modules'''
 
 app = Flask(__name__)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
-
+'''Boiler Plate'''
 
 app.config['SECRET_KEY'] = 'some very hard to guess key'
 '''SECRET_KEY will be moved'''
-
-app.config['SQLALCHEMY_DATABASE_URI']=\
-'sqlite:////' + os.path.join(basedir, 'sqlite_product_location')
-app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
-'''Builds the Database using Flask-sqlalchemy plug-in'''
 
 
 class NameForm(Form):
@@ -62,7 +55,6 @@ def index():
                            order=order)
 
 
-# The /retrieve will use Post method
 @app.route('/retrieve', methods=['GET', 'POST'])
 def retrieve():
     form = NameForm()
@@ -102,7 +94,7 @@ def store():
                 return redirect(url_for('store'))
         except:
             if request.method == 'POST':
-                flash('The locations are full')
+                flash('Locations are full')
                 return redirect(url_for('store'))
     return render_template('store.html', view=view,
                            current_time=datetime.utcnow(), form=form)
