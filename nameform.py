@@ -1,5 +1,6 @@
-from wtforms import SubmitField, SelectField
+from wtforms import SubmitField, SelectField, PasswordField, StringField, BooleanField
 from flask_wtf import Form
+from wtforms.validators import Required
 
 
 '''class NameForm creates an object inheriting from Form.
@@ -20,3 +21,10 @@ class NameForm(Form):
                          ('8oz Mason MP', '8oz Mason MP')
                          ])
     submit = SubmitField('Save')
+
+
+class LoginForm(Form):
+    username = StringField('Username', validators=[Required()])
+    password = PasswordField('Password', validators=[Required()])
+    remember_me = BooleanField('Keep me logged in')
+    login = SubmitField('Login')
