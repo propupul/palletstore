@@ -22,7 +22,7 @@ app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'some secret'
 
-# Flask plugin objects take 'app' object as a param.
+# Flask plugin objects take 'app' object as a parameter.
 manager = Manager(app)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
@@ -62,6 +62,13 @@ class StoreRetrieve(db.Model):
     sku = db.Column(db.String(80))
     date = db.Column(db.String(80))
 
+#    def __init__(self, location, sku, date):
+#        self.location = location
+#        self.sku = sku
+#        self.date = date
+
+    #def __repr__(self):
+        #return '<StoreRetrieve %r>' % self.location
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -114,33 +121,29 @@ def list():
     order = StoreRetrieve.query.order_by(StoreRetrieve.date).all()
     return render_template('list.html', current_time=datetime.utcnow(),
                            order=order)
-
-# Load testing the site
-@app.route('/loaderio-507735138/')
+@app.route('/loaderio-50773513826b6129054099d8691c796c/')
 def loaderio():
-    return send_from_directory(os.path.join(os.path.dirname('loaderio-5077')),'loaderio-50773')
-
+    return send_from_directory(os.path.join(os.path.dirname('loaderio-50773513826b6129054099d8691c796c')),'loaderio-50773513826b6129054099d8691c796c.txt')
 
 # Second route retrieve page
 @app.route('/retrieve', methods=['GET', 'POST'])
 @login_required
 def retrieve():
     form = NameForm()
-    order = StoreRetrieve.query.filter_by(sku=form.select.data).order_by(StoreRetrieve.date).all()
-    for item in order:
-        if item.date <= str(date.today()) and request.method == 'POST':
-            perma_date = item.date
-            item.sku = 'Empty'
-            item.date = 'N/A'
-            db.session.add(item)
+    bay = StoreRetrieve.query.filter_by(sku=form.select.data).order_by(StoreRetrieve.date).all()
+    if not bay and request.method == 'POST':
+        flash('No {} pallets available to retrieve'.format(form.select.data))
+        return redirect(url_for('retrieve'))
+    for pallet in bay:
+        print(type(pallet.date))
+        if pallet.date <= str(datetime.now().strftime("%m-%d-%Y")) and request.method == 'POST':
+            perma_date, pallet.sku, pallet.date = pallet.date, 'Empty', 'N/A'
+            db.session.add(pallet)
             db.session.commit()
-            flash('Product Name: %s - Location: %s Store date: %s'
-                  % (form.select.data, item.location, perma_date))
-            return(redirect(url_for('retrieve')))
-            flash('more {} pallets available to retrieve'.format(form.select.data))
-            return(redirect(url_for('retrieve')))
-    return render_template('retrieve.html',
-                           current_time=datetime.utcnow(), form=form)
+            flash('Product Name: {} | Location: {} | Store date: {}'.format(form.select.data, pallet.location, perma_date))
+            return redirect(url_for('retrieve'))
+    return render_template('retrieve.html', current_time=datetime.utcnow(), form=form)
+
 ''''Retrieve Page: Retrieves the selected product with the oldest date. stored the NameForm object in the "form" variable. "order" variable holds StoreRetrieve which is the name of the database model, 
 imorted from database_config.py which sets up the initial configuration using flask-sqlalchemy. "order" object variable queries the entire list of products in their location, 
 filtered by selected proudct, and ordered by date. "older_date" object variable queries the first item/sku/product in the list by selected product, and by date. for "item" in "order" iterates through the entire list of products using "item" as the index variable. if "older_date.date" is less than today's date and the "request.method" is equals to 'POST' then create a "perma_date" variable containing the "older_date.date" object. Make the "older_date.sku" an "Empty" string, and the "older.date.date" a "N/A" string as well. Add and commit the session to the table. Used flask-bootstrap and give the user a "flash" message which displays the product name and its store date. If locations are full display a "there are no more pallets avialble to retrieve DEBUG" thats' a debug for me.  '''
@@ -150,52 +153,40 @@ filtered by selected proudct, and ordered by date. "older_date" object variable 
 @app.route('/store', methods=['GET', 'POST'])
 @login_required
 def store():
-    top_location = [] # Top locations stored here (i.e A1-3R, A1-3L)
-    available_location = [] # available locations stored here
-    unracked_location = ['A8-2L', 'A8-2R', 'A9-2L', 'A9-2R', 'A13-2L', 'A13-2R', ]
-    third_level_s = [] # third level location that are not racked
+    #unracked_location = ['A8-2L', 'A8-2R', 'A9-2L', 'A9-2R', 'A13-2L', 'A13-2R']
 
     form = NameForm() # instance of NameForm() object
-    view = StoreRetrieve.query.filter(StoreRetrieve.sku.startswith('Empty')).all() # view is a 'list' type containing all the 'Empty' skus available
-    for item in view: # objects inside the 'view' list are classes with ['date', 'location', 'metadata', 'query', 'query_class', 'sku'] usable methods (i.e item.sku, item.date)
-        end_L = item.location.endswith('3L')
-        end_R = item.location.endswith('3R')
-        end_LS = item.location.endswith('3LS')
-        end_RS= item.location.endswith('3RS')
+    empty_bay = StoreRetrieve.query.filter(StoreRetrieve.sku.startswith('Empty')).all() # empty_bay is a 'list' type containing all the 'Empty' skus available
 
-        if end_L or end_R: # If either end_L or end_R are true run the code below. They should end in 3L or 3R
-            sku_search = StoreRetrieve.query.filter_by(location=item.location).first() # sku_search is a class type object with the following methods [date', 'location', 'metadata', 'query', 'query_class', 'sku'] printing the first item filtered by location
-            top_location.append(sku_search.location) # This will append all the locations ending in 3L or 3R in the top_location list
+    top_location = [top.location for top in empty_bay if top.location.endswith('3L') or top.location.endswith('3R')]
+    # print("print length:", len(top_location), top_location)
+
+    third_level_s = [special.location for special in empty_bay if special.location.endswith('3LS') or special.location.endswith('3RS')]
+
+    remaining_location = [remaining.location for remaining in empty_bay if not remaining.location.endswith('3L')
+                          and not remaining.location.endswith('3R') and not remaining.location.endswith('3LS') and
+                          not remaining.location.endswith('3RS')]
+    unracked_location = ['A8-2L', 'A8-2R', 'A9-2L', 'A9-2R', 'A13-2L', 'A13-2R', 'A8-3LS', 'A9-3RS', 'A13-3LS', 'A13-3RS']
 
 
-        if end_RS or end_LS:
-            sku_search = StoreRetrieve.query.filter_by(location=item.location).first()
-            third_level_s.append(sku_search.location)
-
-        if not end_L and not end_R: # if end_L == 'False' and end_R == 'False' only then run the code below, and append to available_location list the locations that do not end in either 3L or 3R
-            sku_search = StoreRetrieve.query.filter_by(location=item.location).first()
-            available_location.append(sku_search.location)
 
     try:
         if request.method == 'POST' and (form.select.data == '464 10lbs' or form.select.data == '444 10lbs') and top_location:
-            print(top_location)
             sku_search = StoreRetrieve.query.filter_by(location=top_location[0]).first()
             sku_search.sku = form.select.data
-            flash('SKU {}: '.format(sku_search.sku))
-            sku_search.date = date.today()
-            flash("Today's date: {}".format(sku_search.date))
-            flash("Location: {}".format(sku_search.location))
+            sku_search.date = datetime.now().strftime("%m-%d-%Y")
+            print('before commit')
             db.session.add(sku_search)
             db.session.commit()
-            flash('Second Try')
+            print('after commit')
+            flash("SKU: {} | Today's date: {} | Location: {} ".format(sku_search.sku, sku_search.date, sku_search.location))
             return redirect(url_for('store'))
 
         elif request.method == 'POST' and (form.select.data == '464 10lbs' or form.select.data == '444 10lbs') and not top_location:
-            print(available_location)
-            sku_search = StoreRetrieve.query.filter_by(location=available_location[0]).first()
+            sku_search = StoreRetrieve.query.filter_by(location=remaining_location[0]).first()
             sku_search.sku = form.select.data
             flash('SKU: {}'.format(sku_search.sku))
-            sku_search.date = date.today()
+            sku_search.date = datetime.now().strftime("%m-%d-%Y")
             flash("Today's date: {}".format(sku_search.date))
             flash("Location: {}".format(sku_search.location))
             db.session.add(sku_search)
@@ -203,47 +194,45 @@ def store():
             print('elif')
             return redirect(url_for('store'))
 
-    except:
-        flash('Something went wrong: 1st except')
 
+    except:
+        flash('No more space for {}'.format(form.select.data))
 
     try:
         if request.method == 'POST' and (form.select.data != '464 10lbs' or form.select.data != '444 10lbs') and (top_location or not top_location):
-            for place in available_location:
+            for place in remaining_location:
+                print(remaining_location)
                 if place in unracked_location:
-                    print(place)
                     sku_search = StoreRetrieve.query.filter_by(location=place).first()
                     sku_search.sku = form.select.data
-                    flash('SKU: {}'.format(sku_search.sku))
-                    sku_search.date = date.today()
-                    flash("Today's date: {}".format(sku_search.date))
-                    flash("Location: {}".format(sku_search.location))
+                    sku_search.date = datetime.now().strftime("%m-%d-%Y")
                     db.session.add(sku_search)
                     db.session.commit()
-                    print('second try')
+                    flash("SKU: {} | Today's date: {} | Location: {} ".format(sku_search.sku, sku_search.date, sku_search.location))
                     flash('second try')
                     return redirect(url_for('store'))
+
+
+
     except:
-        flash('something went wrong: 2nd except')
+        flash('locations are full')
 
 
     try:
         if request.method == 'POST' and form.select.data != '464 10lbs' and (top_location or not top_location):
-            sku_search = StoreRetrieve.query.filter_by(location=available_location[0]).first()
+            sku_search = StoreRetrieve.query.filter_by(location=remaining_location[0]).first()
             sku_search.sku = form.select.data
-            flash('SKU: {}'.format(sku_search.sku))
-            sku_search.date = date.today()
-            flash("Today's date: {}".format(sku_search.date))
-            flash("Location: {}".format(sku_search.location))
+            sku_search.date = datetime.now().strftime("%m-%d-%Y")
             db.session.add(sku_search)
             db.session.commit()
+            flash("SKU: {} | Today's date: {} | Location: {} ".format(sku_search.sku, sku_search.date, sku_search.location))
             flash('Last Try')
             return redirect(url_for('store'))
     except:
-        if not top_location and not available_location and not third_level_s:
-            flash('something went wrong: third except')
+        if not top_location and not remaining_location and not third_level_s:
+            flash('All locations are full--++')
 
-    return render_template('store.html', view=view,
+    return render_template('store.html', view=empty_bay,
                            current_time=datetime.utcnow(), form=form)
 
 
@@ -262,6 +251,6 @@ def login():
 
 if __name__ == '__main__':
     app.debug = True
-    #app.run('0.0.0.0', port=5000)
-    port = int(os.environ.get("PORT", 5000))
+    app.run('0.0.0.0', port=5000) # to run it locally
+    #port = int(os.environ.get("PORT", 5000)) # to run it on production
     app.run(host='0.0.0.0', port=port)
