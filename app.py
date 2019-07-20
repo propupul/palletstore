@@ -1,37 +1,24 @@
-import os
-from datetime import datetime, date
-from flask import Flask, render_template, url_for, redirect, \
+from startup import os, app, datetime, date
+from flask import render_template, url_for, redirect, \
                   request, flash, send_from_directory
-from flask_script import Manager, Shell
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate, MigrateCommand
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, UserMixin, login_user,\
+from flask_login import LoginManager, login_user,\
                         login_required, logout_user
 from nameform import NameForm, LoginForm
+from models import User, StoreRetrieve
+from models import Manager, Shell
 '''Imported modules'''
-basedir = os.path.abspath(os.path.dirname(__file__))
 
+manager = Manager(app)
 # Flask object
-app = Flask(__name__)
-
-# Database Config
-app.config['SQLALCHEMY_DATABASE_URI'] = \
-            'sqlite:///' + os.path.join(basedir, 'sqlite_product_location')
-app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'some secret'
 
-# Flask plugin objects take 'app' object as a parameter.
-manager = Manager(app)
+#  Flask plugin objects take 'app' object as a parameter.
 bootstrap = Bootstrap(app)
 moment = Moment(app)
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 
-manager.add_command('db', MigrateCommand)
+
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 login_manager.login_view = 'login'
@@ -78,7 +65,7 @@ def internal_server_error(e):
 
 @app.route('/')
 def index():
-    return render_template('index.html', current_time=datetime.utcnow())
+    return render_template('list.html', current_time=datetime.utcnow())
 
 
 # Page that contains list of warehouse locations, skus and dates
