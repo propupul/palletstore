@@ -43,3 +43,10 @@ env
 
 # SQL Database
 sqlite_product_location
+
+# VS code
+<<<<<<< Updated upstream
+.vscode/
+=======
+.vscode
+>>>>>>> Stashed changes
