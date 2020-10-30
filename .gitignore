@@ -40,6 +40,7 @@ nosetests.xml
 
 # Virtual environment
 env
+venv
 
 # SQL Database
 sqlite_product_location
