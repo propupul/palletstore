@@ -1,12 +1,12 @@
 from wtforms import SubmitField, SelectField, PasswordField, StringField, BooleanField
-from flask_wtf import Form
-from wtforms.validators import Required
+from flask_wtf import FlaskForm
+from wtforms.validators import DataRequired
 
 
 '''class NameForm creates an object inheriting from Form.
 Using SelectField creates a dropdown which takes two arguments,
 that make it a dropdown and SubmitField to create a save button'''
-class NameForm(Form):
+class NameForm(FlaskForm):
     select = SelectField('Select Product', choices=[
                          ('464 50lbs', '464 50lbs'),
                          ('444 50lbs', '444 50lbs'),
@@ -23,8 +23,8 @@ class NameForm(Form):
     submit = SubmitField('Save')
 
 
-class LoginForm(Form):
-    username = StringField('Username', validators=[Required()])
-    password = PasswordField('Password', validators=[Required()])
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Keep me logged in')
     login = SubmitField('Login')
