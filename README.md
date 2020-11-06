@@ -3,6 +3,8 @@ Store: Pick a product(sku), and program will tell you which location to store it
 
 Retrieve: Chose a product(sku) and the program will tell you which location to get it from, the program choses the oldest item of the product you selected by date.
 
+This program uses Flask. One file contains the program `app.py
+
 Requirements:
 Python 3
 

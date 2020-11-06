@@ -1,7 +1,6 @@
 import os # Python standard library
 from datetime import datetime, date # Python standard library
 from flask import Flask, render_template, url_for, redirect, request, flash # Main Flask modules
-from flask_script import Manager, Shell # Library no longer maintained and will be removed
 from flask_bootstrap import Bootstrap # Bootstrap plugin
 from flask_moment import Moment # This extension enhances Jinja2 templates with formatting of dates and times using moment.js.
 from flask_sqlalchemy import SQLAlchemy # Adds support for SQLAlchemy
@@ -23,13 +22,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'lflkajsdlkfjsadk;ldklfjsakl;fjslajitrjiwj'
 
 # Flask plugin objects take 'app' object as a param.
-manager = Manager(app)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-manager.add_command('db', MigrateCommand)
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
 login_manager.login_view = 'login'
@@ -96,9 +93,6 @@ def make_shell_context():
     return dict(app=app, db=db, StoreRetrieve=StoreRetrieve, User=User)
 
 
-manager.add_command("shell", Shell(make_context=make_shell_context))
-
-
 # Error Pages
 @app.errorhandler(404)
 def page_not_found(e):
@@ -128,8 +122,6 @@ def retrieve():
     order = StoreRetrieve.query.filter_by(sku=form.select.data).order_by(StoreRetrieve.date).all()
     older_date = StoreRetrieve.query.filter_by(sku=form.select.data).order_by(StoreRetrieve.date).first()
     for item in order:
-        print('for item executes')
-        print(older_date)
         if request.method == 'POST':
             perma_date = older_date.date
             older_date.sku = 'Empty'
@@ -280,7 +272,5 @@ def login():
 
 
 if __name__ == '__main__':
-    app.debug = True
-    app.run('0.0.0.0', port=5000)
-    #port = int(os.environ.get("PORT", 5000))
-    #app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
